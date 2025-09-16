@@ -9,5 +9,6 @@ router.post('/offer', appController.createOffer);
 router.post('/leads/upload', upload.single('file'), appController.uploadleads);
 router.post('/score', appController.runScores);
 router.get('/results', appController.getResults);
+router.get('/results-csv', appController.getCsvResults);
 
 module.exports = router;
