@@ -1,6 +1,7 @@
 const logger = require('../utils/winstonLogger.js');
 const csv = require('csv-parser');
 const { Readable } = require("stream");
+const { Parser } = require("json2csv");
 const { computeRuleScore, callLLM, mapIntentToPoints } = require('../services/appService.js');
 
 let offer = null;
@@ -88,10 +89,10 @@ const runScores = async (req, res) => {
     for (const lead of leads) {
         logger.info(`triggered lead`)
         const rule_score = computeRuleScore(offer, lead);
-        logger.info('manual score calculated')
+        logger.info(`manual score calculated ${rule_score}`)
         const aiResp = await callLLM(offer, lead);
-        logger.info('llm score calculated')
         const ai_points = mapIntentToPoints(aiResp.intent);
+        logger.info(`llm score calculated ${aiResp.intent}`)
         const final_score = rule_score + ai_points;
         logger.info('final score calculated')
         results.push({
@@ -114,4 +115,14 @@ const getResults = (req, res) => {
     })
 }
 
-module.exports = { createOffer, uploadleads, runScores, getResults };
+const getCsvResults = (req,res) => {
+    const fields = ["name", "role", "company", "industry", "location", "linkedin_bio", "intent", "score", "reasoning", "created_at"];
+    const parser = new Parser({ fields });
+    const csv = parser.parse(results);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("data.csv");
+    res.send(csv);
+}
+
+module.exports = { createOffer, uploadleads, runScores, getResults , getCsvResults};

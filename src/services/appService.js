@@ -6,8 +6,8 @@ if (!process.env.GOOGLE_API_KEY) {
     throw new Error('GOOGLE_API_KEY is not set. Add it to your environment or a .env file.');
 }
 
-const decisionMakers = ["ceo", "founder", "co-founder", "head", "vp", "director", "cto", "cio", "managing director"];
-const influencers = ["manager", "lead", "senior", "principal", "specialist"];
+const decisionMakers = new Set(["ceo", "founder", "co-founder", "head", "vp", "director", "cto", "cio", "managing director"]);
+const influencers = new Set(["manager", "lead", "senior", "principal", "specialist"]);
 
 const computeRuleScore = (offer, lead) => {
     let role_points = 0;
@@ -18,7 +18,7 @@ const computeRuleScore = (offer, lead) => {
     role_points = getRolePoints(lead);
     industry_points = getIndustryPoints(offer, lead);
     completeness_points = getCompletenessPoints(lead);
-    logger.info(`cr 2`)
+    logger.info(`role_points::${role_points} industry_points::${industry_points} completeness_points::${completeness_points}`)
 
     return role_points + industry_points + completeness_points;
 }
@@ -62,11 +62,10 @@ const mapIntentToPoints = (aiIntent) => {
 }
 
 function getRolePoints(lead) {
-    let role = lead.role;
-    role = role.toLowerCase();
+    let role = lead.role.toLowerCase();
 
-    if (decisionMakers.includes(role)) return 20;
-    else if (influencers.includes(role)) return 10;
+    if (decisionMakers.has(role)) return 20;
+    else if (influencers.has(role)) return 10;
     else return 0;
 }
 
