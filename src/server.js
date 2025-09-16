@@ -12,6 +12,14 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
+app.get('/health',(req,res)=>{
+    res.status(200).json({
+        status: "ok",
+        message: "service runnning",
+        time: new Date()
+    })
+})
+
 //routes
 app.use('/', appRoutes);
 
