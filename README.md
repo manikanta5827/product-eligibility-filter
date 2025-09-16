@@ -148,7 +148,7 @@ docker run -p 3000:3000 -e GOOGLE_API_KEY=your_key_here product-eligibility-filt
 ```
 
 ### Live API Base URL
-*[Add your deployed API URL here when available]*
+*[https://product-eligibility-filter.onrender.com]*
 
 ## Bonus Features
 

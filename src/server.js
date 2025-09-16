@@ -12,7 +12,14 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
-app.get('/health',(req,res)=>{
+app.get('/', (req, res) => {
+    res.json({
+        status: "success",
+        message: "service running"
+    })
+})
+
+app.get('/health', (req, res) => {
     res.status(200).json({
         status: "ok",
         message: "service runnning",
