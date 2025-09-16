@@ -1,6 +1,7 @@
 const logger = require('../utils/winstonLogger.js');
 const csv = require('csv-parser');
 const { Readable } = require("stream");
+const { computeRuleScore, callLLM, mapIntentToPoints } = require('../services/appService.js');
 
 let offer = null;
 let leads = [];
@@ -38,7 +39,7 @@ const createOffer = (req, res) => {
 }
 
 const uploadleads = async (req, res) => {
-    if (!req.file){
+    if (!req.file) {
         return res.status(400).json({
             status: "error",
             message: "no file uploaded"
@@ -54,13 +55,13 @@ const uploadleads = async (req, res) => {
         .pipe(csv())
         .on("data", (row) => {
             // console.log(row);
-            if(row.name && row.company && row.role && row.industry && row.location && row.linkedin_bio) {
+            if (row.name && row.role && row.industry) {
                 // console.log('inside');
-                leads.push({id:rows++, ...row})
+                leads.push({ id: rows++, ...row })
             }
         })
-        .on('end',()=>{
-            console.log( leads);
+        .on('end', () => {
+            console.log(leads);
             return res.status(201).json({
                 status: "success",
                 message: "leads uplaoded successfully",
@@ -70,6 +71,34 @@ const uploadleads = async (req, res) => {
 }
 
 const runScores = async (req, res) => {
+    if (!offer) {
+        return res.status(400).json({
+            status: "error",
+            message: "no offer set"
+        });
+    }
+
+    if (leads.length == 0) {
+        return res.status(400).json({
+            status: "error",
+            message: "no leads set"
+        })
+    }
+
+    for (const lead of leads) {
+        logger.info(`triggered lead`)
+        const rule_score = computeRuleScore(offer, lead);
+        logger.info('manual score calculated')
+        const aiResp = await callLLM(offer, lead);
+        logger.info('llm score calculated')
+        const ai_points = mapIntentToPoints(aiResp.intent);
+        const final_score = rule_score + ai_points;
+        logger.info('final score calculated')
+        results.push({
+            ...lead, intent: aiResp.intent, score: final_score, reasoning: aiResp.explanation, created_at: new Date()
+        });
+    }
+    results.sort((a, b) => b.score - a.score);
     res.status(201).json({
         status: "success",
         message: "scores runned successfully",
@@ -78,7 +107,6 @@ const runScores = async (req, res) => {
 }
 
 const getResults = (req, res) => {
-    logger.info('results fetched successfully');
     res.status(200).json({
         status: "success",
         message: "results fetched successfully",
