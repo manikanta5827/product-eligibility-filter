@@ -1,19 +1,34 @@
 const logger = require('../utils/winstonLogger.js');
-const { parse } = require('stack-trace');
 const path = require('path');
 
 const errorHandler = (err, req, res, next) => {
     let errorMessage = err.message;
-    const stackFrames = parse(err);
 
-    if (stackFrames[0]) {
-        let fileName = path.basename(stackFrames[0].getFileName() ?? 'fileNotfound');
-        let lineNumber = stackFrames[0].getLineNumber();
-        let functionName = stackFrames[0].getFunctionName();
+    // Parse stack trace manually
+    const stack = err.stack;
+    if (stack) {
+        const stackLines = stack.split('\n');
+        const firstStackLine = stackLines[1]; // Skip the error message line
 
-        let logMessage = `[CRITICAL]: Error happened in file::${fileName} Line::${lineNumber} FunctionName::${functionName} Message::${errorMessage}`;
+        if (firstStackLine) {
+            // Extract file path and line number from stack trace
+            const match = firstStackLine.match(/at\s+(.+?)\s+\((.+?):(\d+):(\d+)\)/);
+            if (match) {
+                const functionName = match[1];
+                const filePath = match[2];
+                const lineNumber = match[3];
+                const fileName = path.basename(filePath);
 
-        logger.warn(logMessage);
+                let logMessage = `[CRITICAL]: Error happened in file::${fileName} Line::${lineNumber} FunctionName::${functionName} Message::${errorMessage}`;
+                logger.warn(logMessage);
+            } else {
+                logger.warn(`[CRITICAL]: Error - ${errorMessage}`);
+            }
+        } else {
+            logger.warn(`[CRITICAL]: Error - ${errorMessage}`);
+        }
+    } else {
+        logger.warn(`[CRITICAL]: Error - ${errorMessage}`);
     }
 
     res.status(500).send({
