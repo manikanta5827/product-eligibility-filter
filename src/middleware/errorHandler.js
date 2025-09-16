@@ -1,12 +1,12 @@
 const logger = require('../utils/winstonLogger.js');
-const { parse  } = require('stack-trace');
+const { parse } = require('stack-trace');
 const path = require('path');
 
-const errorHandler = (err, req,res, next) => {
+const errorHandler = (err, req, res, next) => {
     let errorMessage = err.message;
-    const stackFrames = parse(err); 
+    const stackFrames = parse(err);
 
-    if(stackFrames[0]) {
+    if (stackFrames[0]) {
         let fileName = path.basename(stackFrames[0].getFileName() ?? 'fileNotfound');
         let lineNumber = stackFrames[0].getLineNumber();
         let functionName = stackFrames[0].getFunctionName();
