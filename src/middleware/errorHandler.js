@@ -4,14 +4,12 @@ const path = require('path');
 const errorHandler = (err, req, res, next) => {
     let errorMessage = err.message;
 
-    // Parse stack trace manually
     const stack = err.stack;
     if (stack) {
         const stackLines = stack.split('\n');
-        const firstStackLine = stackLines[1]; // Skip the error message line
+        const firstStackLine = stackLines[1];
 
         if (firstStackLine) {
-            // Extract file path and line number from stack trace
             const match = firstStackLine.match(/at\s+(.+?)\s+\((.+?):(\d+):(\d+)\)/);
             if (match) {
                 const functionName = match[1];
